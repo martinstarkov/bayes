@@ -22,9 +22,6 @@ T Clamp(const T& value, const T& low, const T& high) {
 }
 
 template <typename T>
-struct Quaternion;
-
-template <typename T>
 struct Vector3 {
     T x{ 0 }, y{ 0 }, z{ 0 };
     
@@ -37,8 +34,6 @@ struct Vector3 {
 		return "[" + String(x) + "x," + String(y) + "y," + String(z) + "z]";
 	}
 	*/
-    
-    operator Quaternion<T>();
 
     Vector3 DegreesToRadians() {
         return { x * DEG_TO_RAD, y * DEG_TO_RAD, z * DEG_TO_RAD };
@@ -61,13 +56,6 @@ struct Quaternion {
 		return "[" + String(w) + "," + String(x) + "i," + String(y) + "j," + String(z) + "k]";
 	}
 	*/
-	
-    bool operator== (const Quaternion& o) {
-		return w == o.w && x == o.x && y == o.y && z == o.z;
-	}
-	bool operator!= (const Quaternion& o) {
-		return !(*this == o);
-	}
     Quaternion& operator+=(const Quaternion& rhs) {
         w += rhs.w;
         x += rhs.x;
@@ -130,35 +118,7 @@ struct Quaternion {
         Quaternion quaternion{ 0, w.x, w.y, w.z };
         return quaternion * (*this) / T(2);
     }
-    Quaternion Integrated(double dt) {
-        Quaternion quaternion;
-        quaternion.w = w * dt;
-        quaternion.x = x * dt;
-        quaternion.y = y * dt;
-        quaternion.z = z * dt;
-        return quaternion;
-    }
 };
-
-template <typename T>
-Vector3<T>::operator Quaternion<T>() {
-    // Roll (x-axis rotation).
-    auto cr = cos(z / T(2));
-    auto sr = sin(z / T(2));
-    // Pitch (y-axis rotation).
-    auto cp = cos(y / T(2));
-    auto sp = sin(y / T(2));
-    // Yaw (z-axis rotation).
-    auto cy = cos(x / T(2));
-    auto sy = sin(x / T(2));
-
-    Quaternion<T> q;
-    q.w = cr * cp * cy + sr * sp * sy;
-    q.x = sr * cp * cy - cr * sp * sy;
-    q.y = cr * sp * cy + sr * cp * sy;
-    q.z = cr * cp * sy - sr * sp * cy;
-    return q;
-}
 
 struct Sensors {
     
@@ -204,22 +164,25 @@ struct Filter {
 };
 
 struct Controller {
-    static constexpr double TVC_position_gain = 0.7278;
-    static constexpr double TVC_velocity_gain = 0.3640;
+    static constexpr double INTEGRAL_GAIN = 2.0;
+    static constexpr double TVC_POSITION_GAIN = 0.7278;
+    static constexpr double TVC_VELOCITY_GAIN = 0.3640;
     template <typename T>
     static T LQR(T angular_position, T angular_velocity) {
-        auto U_pos = -TVC_position_gain * angular_position;
-        auto U_vel = -TVC_velocity_gain * angular_velocity;
+        auto U_pos = -TVC_POSITION_GAIN * angular_position;
+        auto U_vel = -TVC_VELOCITY_GAIN * angular_velocity;
         return U_pos + U_vel;
     }
 };
 
 Sensors sensors;
 Vector3<double> integral;
-#define INTEGRAL_GAIN 2
 Filter<double> y_filter;
 Filter<double> z_filter;
+// Initial orientation quaternion of the hopper.
 Quaternion<double> base{ 0.71, 0.71, 0.0, 0.0 };
+// 0.122173 radians is 7 in degrees.
+constexpr double maximum_angle = 0.122173; // unit: radians.
 
 void setup() {
     sensors.Init();
@@ -244,25 +207,24 @@ void loop() {
     };
     
     // Orientation resolution to prevent gimbal lock.
-    auto q_half = base / 2.0;
-    auto q_dot = q_half.Differentiated(processed_ang_vel);
-    auto q_int = q_dot.Integrated(dt);
-    base += q_int;
+    auto q_dot = base.Differentiated(processed_ang_vel);
+    base += q_dot * dt;
+    // TODO: Research, this normalization may not be required.
     base = base.Normalized();
     auto ang_pos = Vector3<double>(base).RadiansToDegrees();
 
     // Integrated control gains.
-    integral.y += INTEGRAL_GAIN * ang_pos.y * dt;
-    integral.z += INTEGRAL_GAIN * ang_pos.z * dt;
+    integral.y += Controller::INTEGRAL_GAIN * ang_pos.y * dt;
+    integral.z += Controller::INTEGRAL_GAIN * ang_pos.z * dt;
     
     // LQR.
     auto control_y = Controller::LQR(ang_pos.y, processed_ang_vel.y);
     auto control_z = Controller::LQR(ang_pos.z, processed_ang_vel.z);
     control_y += integral.y;
     control_z += integral.z;
-    // 0.122173 radians is 7 in degrees.
-    control_y = Clamp(control_y, -0.122173, 0.122173); 
-    control_z = Clamp(control_z, -0.122173, 0.122173);
+    // Ensure control angle is never above or below the maximum controllability.
+    control_y = Clamp(control_y, -maximum_angle, maximum_angle); 
+    control_z = Clamp(control_z, -maximum_angle, maximum_angle);
     
     // Update servos with latest values.
     // TODO: Make this write the calculated control angles:
