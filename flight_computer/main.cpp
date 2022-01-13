@@ -1,4 +1,6 @@
 #include <cmath>
+// TEMP:
+#include <iostream>
 
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
@@ -15,6 +17,52 @@
 #ifndef RAD_TO_DEG
 #define RAD_TO_DEG 57.295779513082320876798154814105
 #endif
+
+#ifndef sensor_warning
+#define sensor_warning "Sensor type must be present in SensorPackage template list"
+#endif
+#ifndef constructor_warning
+#define constructor_warning "Sensor type must be default constructible"
+#endif
+
+// https://en.cppreference.com/w/cpp/types/integral_constant
+template<class T, T v>
+struct integral_constant {
+    static constexpr T value = v;
+    using value_type = T;
+    using type = integral_constant;
+    constexpr operator value_type() const noexcept { return value; }
+    constexpr value_type operator()() const noexcept { return value; }
+};
+
+using true_type = integral_constant<bool, true>;
+using false_type = integral_constant<bool, false>;
+
+// https://en.cppreference.com/w/cpp/types/void_t
+template<typename... Ts> struct make_void { typedef void type; };
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
+
+// https://stackoverflow.com/a/46136532
+template<typename T, typename = void>
+struct is_default_constructible : false_type { };
+
+template<typename T>
+struct is_default_constructible<T, void_t<decltype(T())>> : true_type { };
+
+// https://stackoverflow.com/a/39294584
+template <typename T, typename... Args>
+struct contains;
+
+template <typename T>
+struct contains<T> : false_type {};
+
+template <typename T, typename... Args>
+struct contains<T, T, Args...> : true_type {};
+
+template <typename T, typename A, typename... Args>
+struct contains<T, A, Args...> : contains<T, Args...> {};
+
+template <typename L, typename... R> struct SensorPackage;
 
 template <typename T>
 T Clamp(const T& value, const T& low, const T& high) {
@@ -120,27 +168,24 @@ struct Quaternion {
     }
 };
 
-struct Sensors {
-    
-    // ... Add sensor code here ...
-
-    // TODO: Replace rand in below functions.
-
-    Sensors() = default;
-
-    void Init() {
-
+template <typename L>
+struct SensorPackage<L> {
+    static_assert(is_default_constructible<L>::value, constructor_warning);
+    template <typename T>
+    T& Get() {
+        static_assert(contains<T, L>::value, sensor_warning);
+        return sensor;
     }
+protected:
+    L sensor;
+};
 
-    double GetAltitude() {
-       return 2; 
-    }
-
-    Vector3<double> GetAngularVelocity() {
-        return { 0.01, 0.01, 0.01 };
-    }
-    Vector3<double> GetAngularPosition() {
-        return { 5, 5, 5 };
+template <typename L, typename ...R>
+struct SensorPackage : public SensorPackage<L>, public SensorPackage<R...> {
+    template <typename T>
+    T& Get() {
+        static_assert(contains<T, L, R...>::value, sensor_warning);
+        return this->SensorPackage<T>::template Get<T>();
     }
 };
 
@@ -175,8 +220,36 @@ struct Controller {
     }
 };
 
+struct BMP {
+    void Init() {
+        // TODO: Implement BMP instance here.
+    }
+    int GetTemperature() {
+        return 30;
+    }
+    int GetAltitude() {
+        return 2000;
+    }
+private:
+    // ...
+};
+
+struct BNO {
+    void Init() {
+        // TODO: Implement BNO instance here.
+    }
+    Vector3<double> GetAngularVelocity() {
+        return { 0.01, 0.01, 0.01 };
+    }
+    Vector3<double> GetAngularPosition() {
+        return { 5, 5, 5 };
+    }
+private:
+    // ...
+};
+
 struct FlightComputer {
-    Sensors sensors;
+    SensorPackage<BMP, BNO> sensors;
     Vector3<double> integral;
     Filter<double> y_filter;
     Filter<double> z_filter;
@@ -186,7 +259,8 @@ struct FlightComputer {
     double maximum_angle = 0.122173; // unit: radians.
     
     void Init() {
-        sensors.Init();
+        sensors.Get<BMP>().Init();
+        sensors.Get<BNO>().Init();
     }
     
     void Update() {
@@ -195,8 +269,8 @@ struct FlightComputer {
         auto dt = 0.0001;
     
         // Raw sensor data retrieval.
-        auto raw_ang_pos = sensors.GetAngularPosition().DegreesToRadians();
-        auto raw_ang_vel = sensors.GetAngularVelocity().DegreesToRadians();
+        auto raw_ang_pos = sensors.Get<BNO>().GetAngularPosition().DegreesToRadians();
+        auto raw_ang_vel = sensors.Get<BNO>().GetAngularVelocity().DegreesToRadians();
         
         // Filtering of raw sensor data.
         y_filter.UpdateValue(raw_ang_vel.y);
@@ -226,10 +300,14 @@ struct FlightComputer {
         // Ensure control angle is never above or below the maximum controllability.
         control_y = Clamp(control_y, -maximum_angle, maximum_angle); 
         control_z = Clamp(control_z, -maximum_angle, maximum_angle);
-    
+
         // Update servos with latest values.
         // TODO: Make this write the calculated control angles:
         // Servos.write(U_y, U_z)
+
+        // TEMP:
+        std::cout << control_y << std::endl;
+        std::cout << control_z << std::endl;
     }
 };
 
