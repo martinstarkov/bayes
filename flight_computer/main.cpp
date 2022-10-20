@@ -243,6 +243,7 @@ private:
 struct BNO {
     void Init() {
         // TODO: Implement BNO instance here.
+        // TDOO: Add begin 
     }
     Vector3<double> GetAngularVelocity() {
         return { 0.01, 0.01, 0.01 };
