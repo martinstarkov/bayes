@@ -222,16 +222,22 @@ struct Controller {
 
 struct BMP {
     void Init() {
+        // TODO: Make sure this is working properly.
+        bmp.begin();
         // TODO: Implement BMP instance here.
+        // TODO: Check any calibration needed?
+        // bmp.setSettings(A, B, C)???? something like this?
     }
     int GetTemperature() {
-        return 30;
+        // TODO: Fix this to be actually working.
+        return bmp.getTemperature();
     }
     int GetAltitude() {
         return 2000;
     }
 private:
     // ...
+    Adafruit_BMP280 bmp;
 };
 
 struct BNO {
