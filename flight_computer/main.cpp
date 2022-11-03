@@ -35,7 +35,7 @@ struct integral_constant {
     constexpr value_type operator()() const noexcept { return value; }
 };
 
-using true_type = integral_constant<bool, true>;
+using true_type = integral_constant<bool, true>;    
 using false_type = integral_constant<bool, false>;
 
 // https://en.cppreference.com/w/cpp/types/void_t
@@ -222,30 +222,24 @@ struct Controller {
 
 struct BMP {
     void Init() {
-        // TODO: Make sure this is working properly.
-        
+        //Including neccesary libraries for functions to recieve BMP sensor data.
         #include <Wire.h>
         #include <SPI.h>
         #include <Adafruit_BMP280.h>
-
-        //#define BMP_SCK  (13)
-        //#define BMP_MISO (12)
-        //#define BMP_MOSI (11)
-        //#define BMP_CS   (10)
         
+        // We will be using I2C protocol to connect Arduino and BMP.
         Adafruit_BMP280 bmp;
-        
-        bmp.begin();
-        
+        Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
+        Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
+
+        //Checking if BMP is connected to Arduino.
         Serial.begin(9600);
           while ( !Serial ) delay(100);   // wait for native usb
           Serial.println(F("BMP280 test"));
           unsigned status;
-          //status = bmp.begin(BMP280_ADDRESS_ALT, BMP280_CHIPID);
           status = bmp.begin();
           if (!status) {
-            Serial.println(F("Could not find a valid BMP280 sensor, check wiring or "
-                              "try a different address!"));
+            Serial.println(F("Could not find a valid BMP280 sensor, check wiring"));
             Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
             Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
             Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
@@ -254,25 +248,20 @@ struct BMP {
             while (1) delay(10);
           }
 
-          /* Default settings from datasheet. */
+          // Default settings from datasheet.
           bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
                           Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
                           Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
                           Adafruit_BMP280::FILTER_X16,      /* Filtering. */
                           Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+        
+        sensors_event_t temp_event, pressure_event;
+        bmp_temp->getEvent(&temp_event);
+        bmp_pressure->getEvent(&pressure_event);
         }
-    
-        
-        Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor(); // not sure if the Sensor word is necessary
-        Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
-        
-        
-        Serial.print (bmp.getTemperatureSensor ())  //just to make sure it is reading anything
-        Serial.print (bmp. ())
-        // TODO: Implement BMP instance here.
-        // TODO: Check any calibration needed?
-        // bmp.setSettings(A, B, C)???? something like this?
-//    }
+// TODO: Implement BMP instance here.
+// TODO: Check any calibration needed?
+// bmp.setSettings(A, B, C)???? something like this?
 //    int GetTemperature() {
 //
 //        Serial.print(bmp.readTemperature());
@@ -285,7 +274,7 @@ struct BMP {
 //        // TODO: Get this working x
 //        return bmp.getAltitude();
 //    }
-private:
+private:        // What does this do
     // ...
     Adafruit_BMP280 bmp;
 };
