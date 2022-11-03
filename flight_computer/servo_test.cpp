@@ -1,8 +1,11 @@
 #include <Servo.h>
 
-int servoPin = 
+//Servo1 = 10
+//Servo2 = 11
+//Servo 3 = 12
 
-int servoPin = 3; 
+int servoPin = 10
+
 // Create a servo object 
 Servo Servo1; 
 void setup() { 
