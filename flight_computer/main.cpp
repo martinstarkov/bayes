@@ -1,89 +1,42 @@
-// TEMP:
-#include <cmath>
 #include <Servo.h>
-#include <iostream>
 #include <utility/imumaths.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <Adafruit_BMP280.h> // Adafruit_BMP280
 
-/* MACROS*/
+/* DEFINES */
 // For performing arithmetic.
 #ifndef PI
-#define PI 3.1415926535897932384626433832795
+#define PI 3.1415926535897932384626433832795f
 #endif
 #ifndef HALF_PI
-#define HALF_PI 1.5707963267948966192313216916398
+#define HALF_PI 1.5707963267948966192313216916398f
 #endif
 #ifndef TWO_PI
-#define TWO_PI 6.283185307179586476925286766559
+#define TWO_PI 6.283185307179586476925286766559f
 #endif
 #ifndef DEG_TO_RAD
-#define DEG_TO_RAD 0.017453292519943295769236907684886
+#define DEG_TO_RAD 0.017453292519943295769236907684886f
 #endif
 #ifndef RAD_TO_DEG
-#define RAD_TO_DEG 57.295779513082320876798154814105
+#define RAD_TO_DEG 57.295779513082320876798154814105f
 #endif
 
-// For displaying error messages.
-#ifndef sensor_warning
-#define sensor_warning "Sensor type must be present in SensorPackage template list"
-#endif
-#ifndef constructor_warning
-#define constructor_warning "Sensor type must be default constructible"
-#endif
-
-
-// https://en.cppreference.com/w/cpp/types/integral_constant
-template<class T, T v>
-struct integral_constant {
-    static constexpr T value = v;
-    using value_type = T;
-    using type = integral_constant;
-    constexpr operator value_type() const noexcept { return value; }
-    constexpr value_type operator()() const noexcept { return value; }
-};
-
-using true_type = integral_constant<bool, true>;    
-using false_type = integral_constant<bool, false>;
-
-// https://en.cppreference.com/w/cpp/types/void_t
-template<typename... Ts> struct make_void { typedef void type; };
-template<typename... Ts> using void_t = typename make_void<Ts...>::type;
-
-// https://stackoverflow.com/a/46136532
-template<typename T, typename = void>
-struct is_default_constructible : false_type { };
-
-template<typename T>
-struct is_default_constructible<T, void_t<decltype(T())>> : true_type { };
-
-// https://stackoverflow.com/a/39294584
-template <typename T, typename... Args>
-struct contains;
-
-template <typename T>
-struct contains<T> : false_type {};
-
-template <typename T, typename... Args>
-struct contains<T, T, Args...> : true_type {};
-
-template <typename T, typename A, typename... Args>
-struct contains<T, A, Args...> : contains<T, Args...> {};
-
-template <typename L, typename... R> struct SensorPackage;
-
-template <typename T>
-T Clamp(const T& value, const T& low, const T& high) {
+float Clamp(float value, float low, float high) {
     return value < low ? low : (value > high ? high : value);
 }
 
-template <typename T>
-struct Vector3 {
-    T x{ 0 }, y{ 0 }, z{ 0 };
+class Vector3 {
+public:
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
     
     Vector3() = default;
 	~Vector3() = default;
-    Vector3(T x, T y, T z) : x{ x }, y{ y }, z{ z } {}
+    Vector3(float x, float y, float z) : x{ x }, y{ y }, z{ z } {}
 	
     /*=
 	operator String() const {
@@ -91,21 +44,24 @@ struct Vector3 {
 	}
 	*/
 
-    Vector3 DegreesToRadians() {
+    Vector3 ToRadians() {
         return { x * DEG_TO_RAD, y * DEG_TO_RAD, z * DEG_TO_RAD };
     }
-    Vector3 RadiansToDegrees() {
+    Vector3 ToDegrees() {
         return { x * RAD_TO_DEG, y * RAD_TO_DEG, z * RAD_TO_DEG };
     }
 };
 
-template <typename T>
-struct Quaternion {
-    T w{ 1 }, x{ 0 }, y{ 0 }, z{ 0 };
+class Quaternion {
+public:
+    float w = 1.0f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
     
     Quaternion() = default;
 	~Quaternion() = default;
-    Quaternion(T w, T x, T y, T z) : w{ w }, x{ x }, y{ y }, z{ z } {}
+    Quaternion(float w, float x, float y, float z) : w{ w }, x{ x }, y{ y }, z{ z } {}
 	
     /*
 	operator String() const {
@@ -126,14 +82,14 @@ struct Quaternion {
         z -= rhs.z;
         return *this;
     }
-    Quaternion operator*(T f) {
+    Quaternion operator*(float f) {
 		return { w * f, x * f, y * f, z * f };
 	}
-	Quaternion operator/(T f) {
+	Quaternion operator/(float f) {
 		return { w / f, x / f, y / f, z / f };
 	}	
     Quaternion operator*(const Quaternion& q) {
-        Quaternion<T> quaternion;
+        Quaternion quaternion;
         quaternion.w = w * q.w - x * q.x - y * q.y - z * q.z;
         quaternion.x = w * q.x + x * q.w + y * q.z - z * q.y;
         quaternion.y = w * q.y - x * q.z + y * q.w + z * q.x;
@@ -141,223 +97,195 @@ struct Quaternion {
         return quaternion;
     }
 	
-    operator Vector3<T>() {
-        Vector3<T> vector;
+    operator Vector3() {
+        Vector3 vector;
         // Roll (x-axis rotation).
-        auto sinr_cosp = T(2) * (w * x + y * z);
-        auto cosr_cosp = T(1) - T(2) * (x * x + y * y);
+        float sinr_cosp = 2.0f * (w * x + y * z);
+        float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
         vector.x = atan2(sinr_cosp, cosr_cosp);
 
         // Pitch (y-axis rotation).
-        auto sinp = T(2) * (w * y - z * x);
-        if (abs(sinp) >= T(1)) {
+        float sinp = 2.0f * (w * y - z * x);
+        if (abs(sinp) >= 1.0f) {
             vector.y = copysign(HALF_PI, sinp); // use 90 degrees if out of range
         } else {
             vector.y = asin(sinp);
         }
         // Yaw (z-axis rotation).
-        auto siny_cosp = T(2) * (w * z + x * y);
-        auto cosy_cosp = T(1) - T(2) * (y * y + z * z);
+        float siny_cosp = 2.0f * (w * z + x * y);
+        float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
         vector.z = atan2(siny_cosp, cosy_cosp);
         
         return vector;
 	}
     
-    T Magnitude() {
-		return sqrt(w * w + x * x + y * y + z * z);
+    float Magnitude() {
+		return sqrtf(w * w + x * x + y * y + z * z);
 	}
     Quaternion Normalized() {
 		return *this / Magnitude();
 	}
     // w is vector with respect to which the quaternion is differentiated.
-    Quaternion Differentiated(const Vector3<T>& w) {
+    Quaternion Differentiated(const Vector3& w) {
         Quaternion quaternion{ 0, w.x, w.y, w.z };
-        return quaternion * (*this) / T(2);
-    }
-};
-
-template <typename L>
-struct SensorPackage<L> {
-    static_assert(is_default_constructible<L>::value, constructor_warning);
-    template <typename T>
-    T& Get() {
-        static_assert(contains<T, L>::value, sensor_warning);
-        return sensor;
-    }
-protected:
-    L sensor;
-};
-
-template <typename L, typename ...R>
-struct SensorPackage : public SensorPackage<L>, public SensorPackage<R...> {
-    template <typename T>
-    T& Get() {
-        static_assert(contains<T, L, R...>::value, sensor_warning);
-        return this->SensorPackage<T>::template Get<T>();
+        return quaternion * (*this) / 2.0f;
     }
 };
 
 // TODO: Make filter actually return something.
 // Currently filter acts as a empty pass-through container.
-template <typename T>
-struct Filter {
+class Filter {
+public:
     Filter() = default;
-    Filter(T value) : value{ value }, filtered_value{ value } {}
-    T value{ 0 };
-    T filtered_value{ 0 };
-    T integral{ 0 };
-    void UpdateValue(T value) {
+    Filter(float value) : value{ value }, filtered_value{ value } {}
+    void UpdateValue(float value) {
         this->value = value;
         // TODO: Replace this.
         this->filtered_value = this->value;
     }
-    T GetValue() {
+    float GetValue() {
         return filtered_value;
     }
+private:
+    float value = 0.0f;
+    float filtered_value = 0.0f;
+    float integral = 0.0f;
 };
 
-struct Controller {
-    static constexpr double INTEGRAL_GAIN = 2.0;
-    static constexpr double TVC_POSITION_GAIN = 0.7278;
-    static constexpr double TVC_VELOCITY_GAIN = 0.3640;
-    template <typename T>
-    static T LQR(T angular_position, T angular_velocity) {
-        auto U_pos = -TVC_POSITION_GAIN * angular_position;
-        auto U_vel = -TVC_VELOCITY_GAIN * angular_velocity;
+class Controller {
+public:
+    static float LQR(float angular_position, float angular_velocity) {
+        float U_pos = -TVC_POSITION_GAIN * angular_position;
+        float U_vel = -TVC_VELOCITY_GAIN * angular_velocity;
         return U_pos + U_vel;
     }
+private:
+    static constexpr float INTEGRAL_GAIN = 2.0f;
+    static constexpr float TVC_POSITION_GAIN = 0.7278f;
+    static constexpr float TVC_VELOCITY_GAIN = 0.3640f;
 };
 
-struct BMP {
-    void Init() {
-        //Including neccesary libraries for functions to recieve BMP sensor data.
-        #include <Wire.h>
-        #include <SPI.h>
-        #include <Adafruit_BMP280.h>
-        
-        // We will be using I2C protocol to connect Arduino and BMP.
-        Adafruit_BMP280 bmp;
-        Adafruit_Sensor *bmp_temp = bmp.getTemperatureSensor();
-        Adafruit_Sensor *bmp_pressure = bmp.getPressureSensor();
-
-        //Checking if BMP is connected to Arduino.
-        Serial.begin(9600);
-          while ( !Serial ) delay(100);   // wait for native usb
-          Serial.println(F("BMP280 test"));
-          unsigned status;
-          status = bmp.begin();
-          if (!status) {
+class PressureSensor {
+public:
+    void Init(uint8_t address) {
+        bool status = bmp.begin(address);
+        if (!status) {
             Serial.println(F("Could not find a valid BMP280 sensor, check wiring"));
-            Serial.print("SensorID was: 0x"); Serial.println(bmp.sensorID(),16);
-            Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-            Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-            Serial.print("        ID of 0x60 represents a BME 280.\n");
-            Serial.print("        ID of 0x61 represents a BME 680.\n");
-            while (1) delay(10);
-          }
-
-          // Default settings from datasheet.
-          bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
-                          Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
-                          Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
-                          Adafruit_BMP280::FILTER_X16,      /* Filtering. */
-                          Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
-        
-        sensors_event_t temp_event, pressure_event;
-        bmp_temp->getEvent(&temp_event);
-        bmp_pressure->getEvent(&pressure_event);
+            Serial.print("SensorID was: 0x"); 
+            Serial.println(bmp.sensorID(), 16);
+            while (1);
         }
-// TODO: Implement BMP instance here.
-// TODO: Check any calibration needed?
-// bmp.setSettings(A, B, C)???? something like this?
-//    int GetTemperature() {
-//
-//        Serial.print(bmp.readTemperature());
-//        // TODO: Fix this to be actually working.
-//        return bmp.getTemperature();
-//    }
-//    int GetAltitude() {
-//
-//        Serial.print(bmp.readAltitude());
-//        // TODO: Get this working x
-//        return bmp.getAltitude();
-//    }
-private:        // What does this do
-    // ...
+
+        // TODO: Check if this is necessary. What does it even do?
+        // Default settings from datasheet.
+        bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,     /* Operating Mode. */
+                        Adafruit_BMP280::SAMPLING_X2,     /* Temp. oversampling */
+                        Adafruit_BMP280::SAMPLING_X16,    /* Pressure oversampling */
+                        Adafruit_BMP280::FILTER_X16,      /* Filtering. */
+                        Adafruit_BMP280::STANDBY_MS_500); /* Standby time. */
+    }
+    float GetTemperature() {
+        return bmp.readTemperature();
+    }
+    float GetPressure() {
+        return bmp.readPressure();
+    }
+    float GetAltitude(float sea_level_hPa = 1013.25) {
+        return bmp.readAltitude(sea_level_hPa);
+    }
+private:
     Adafruit_BMP280 bmp;
 };
 
-struct BNO {
-    void Init() {
-        Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
-        sensors_event_t event;
-        double gyro_x = 10, gyro_y = 10, gyro_z = 10;
-        // TODO: Implement BNO instance here.
-        // TDOO: Add begin 
+// Inertial measurement unit (IMU)
+class IMU {
+public:
+    void Init(int32_t sensorID = -1, uint8_t address = 0x28, TwoWire *theWire = &Wire) {
+        bno = Adafruit_BNO055(sensorID, address, theWire);
+        if (!bno.begin()) {
+            /* There was a problem detecting the BNO055 ... check your connections */
+            Serial.println("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+            while (1);
+        }
     }
-
-    gyro_x = gyro.x;
-    gyro_y = gyro.y;
-    gyro_z = gyro.z;
-    event.orientation.y
-
-    Vector3<double> GetAngularVelocity() {
-        return { 0.01, 0.01, 0.01 };
+    Vector3 GetOrientation() {
+        sensors_event_t e;
+        bno.getEvent(&e, Adafruit_BNO055::VECTOR_EULER);
+        if (e->type == SENSOR_TYPE_ORIENTATION) {
+            return { e->orientation.x, e->orientation.y, e->orientation.z };
+        }
+        return {};
     }
-    Vector3<double> GetAngularPosition() {
-        return { 5, 5, 5 };
+    Vector3 GetAngularVelocity() {
+        sensors_event_t e;
+        bno.getEvent(&e, Adafruit_BNO055::VECTOR_GYROSCOPE);
+        if (e->type == SENSOR_TYPE_GYROSCOPE) {
+            return { e->gyro.x, e->gyro.y, e->gyro.z };
+        }
+        return {};
+    }
+    Vector3 GetLinearAcceleration() {
+        sensors_event_t e;
+        bno.getEvent(&e, Adafruit_BNO055::VECTOR_LINEARACCEL);
+        if (e->type == SENSOR_TYPE_LINEAR_ACCELERATION) {
+            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
+        }
+        return {};
+    }
+    Vector3 GetGravityAcceleration() {
+        sensors_event_t e;
+        bno.getEvent(&e, Adafruit_BNO055::VECTOR_GRAVITY);
+        if (e->type == SENSOR_TYPE_GRAVITY) {
+            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
+        }
+        return {};
+    }
+    Vector3 GetAngularAcceleration() {
+        sensors_event_t e;
+        bno.getEvent(&e, Adafruit_BNO055::VECTOR_ACCELEROMETER);
+        if (e->type == SENSOR_TYPE_ACCELEROMETER) {
+            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
+        }
+        return {};
     }
 private:
-    // ...
+    Adafruit_BNO055 bno;
 };
 
-struct FlightComputer {
-    SensorPackage<BMP, BNO> sensors;
-    Vector3<double> integral;
-    Filter<double> y_filter;
-    Filter<double> z_filter;
-    // Initial orientation quaternion of the hopper.
-    Quaternion<double> base{ 0.71, 0.71, 0.0, 0.0 };
-    // 0.122173 radians is 7 in degrees.
-    double maximum_angle = 0.122173; // unit: radians.
-    
+class FlightComputer {
+public:
     void Init() {
-        sensors.Get<BMP>().Init();
-        sensors.Get<BNO>().Init();
+        pressure_sensor.Init();
+        imu.Init();
     }
-    
     void Update() {
         // Microcontroller time step calculation.
         // TODO: Change this to compute time from last update.
-        auto dt = 0.0001;
+        float dt = 0.0001f;
     
         // Raw sensor data retrieval.
-        auto raw_ang_pos = sensors.Get<BNO>().GetAngularPosition().DegreesToRadians();
-        auto raw_ang_vel = sensors.Get<BNO>().GetAngularVelocity().DegreesToRadians();
+        float raw_ang_pos = imu.GetAngularPosition().ToRadians();
+        float raw_ang_vel = imu.GetAngularVelocity().ToRadians();
         
         // Filtering of raw sensor data.
         y_filter.UpdateValue(raw_ang_vel.y);
         z_filter.UpdateValue(raw_ang_vel.z);
-        Vector3<double> processed_ang_vel{ 
-            raw_ang_vel.x, 
-            y_filter.GetValue(), 
-            z_filter.GetValue() 
-        };
+        Vector3 processed_ang_vel{ raw_ang_vel.x, y_filter.GetValue(), z_filter.GetValue() };
         
         // Orientation resolution to prevent gimbal lock.
-        auto q_dot = base.Differentiated(processed_ang_vel);
+        Quaternion q_dot = base.Differentiated(processed_ang_vel);
         base += q_dot * dt;
         // TODO: Research, this normalization may not be required.
         base = base.Normalized();
-        auto ang_pos = Vector3<double>(base).RadiansToDegrees();
+        Vector3 ang_pos = Vector3(base).ToDegrees();
     
         // Integrated control gains.
         integral.y += Controller::INTEGRAL_GAIN * ang_pos.y * dt;
         integral.z += Controller::INTEGRAL_GAIN * ang_pos.z * dt;
         
         // LQR.
-        auto control_y = Controller::LQR(ang_pos.y, processed_ang_vel.y);
-        auto control_z = Controller::LQR(ang_pos.z, processed_ang_vel.z);
+        float control_y = Controller::LQR(ang_pos.y, processed_ang_vel.y);
+        float control_z = Controller::LQR(ang_pos.z, processed_ang_vel.z);
         control_y += integral.y;
         control_z += integral.z;
         // Ensure control angle is never above or below the maximum controllability.
@@ -367,25 +295,26 @@ struct FlightComputer {
         // Update servos with latest values.
         // TODO: Make this write the calculated control angles:
         // Servos.write(U_y, U_z)
-
-        // TEMP:
-        std::cout << control_y << std::endl;
-        std::cout << control_z << std::endl;
     }
+private:
+    PressureSensor pressure_sensor;
+    IMU imu;
+    Vector3 integral;
+    Filter y_filter;
+    Filter z_filter;
+    // Initial orientation quaternion of the hopper.
+    Quaternion base{ 0.71f, 0.71f, 0.0f, 0.0f };
+    // 0.122173f radians is 7 in degrees.
+    float maximum_angle = 0.122173f; // unit: radians.
 };
 
 FlightComputer fc;
 
 void setup() {
+    Serial.begin(9600);
     fc.Init();
 }
 
 void loop() {
     fc.Update();
-}
-
-int main() {
-    setup();
-    loop();
-    return 0;
 }
