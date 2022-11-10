@@ -46,7 +46,7 @@ Servo Servo2;
   void setup(void) {
     Serial.begin(115200);
     
-    if (!bno.begin()) {
+    if (!bno.begin()) {;
     /* There was a problem detecting the BNO055 ... check your connections */
     Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
     }
@@ -60,3 +60,4 @@ Servo Servo2;
     Servo1.write(event.orientation.y);
     Servo2.write(event.orientation.z);
   }
+

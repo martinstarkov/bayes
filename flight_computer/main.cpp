@@ -1,7 +1,13 @@
-#include <cmath>
 // TEMP:
+#include <cmath>
+#include <Servo.h>
 #include <iostream>
+#include <utility/imumaths.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
 
+/* MACROS*/
+// For performing arithmetic.
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
@@ -18,12 +24,14 @@
 #define RAD_TO_DEG 57.295779513082320876798154814105
 #endif
 
+// For displaying error messages.
 #ifndef sensor_warning
 #define sensor_warning "Sensor type must be present in SensorPackage template list"
 #endif
 #ifndef constructor_warning
 #define constructor_warning "Sensor type must be default constructible"
 #endif
+
 
 // https://en.cppreference.com/w/cpp/types/integral_constant
 template<class T, T v>
@@ -281,9 +289,18 @@ private:        // What does this do
 
 struct BNO {
     void Init() {
+        Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+        sensors_event_t event;
+        double gyro_x = 10, gyro_y = 10, gyro_z = 10;
         // TODO: Implement BNO instance here.
         // TDOO: Add begin 
     }
+
+    gyro_x = gyro.x;
+    gyro_y = gyro.y;
+    gyro_z = gyro.z;
+    event.orientation.y
+
     Vector3<double> GetAngularVelocity() {
         return { 0.01, 0.01, 0.01 };
     }
