@@ -16,6 +16,8 @@ public:
     (*servo1_Angle) = sin(counter);
     (*servo2_Angle) = cos(counter);
   }
+
+  
 }
 
 Routine servo_Module;
