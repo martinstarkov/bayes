@@ -1,21 +1,21 @@
 #include <math.h>
 #include <Servo.h>
 
-void servo360(float *servo1_Angle, float *servo2_Angle);
-
 class Routine {
 public:
   Servo servo1, servo2;
   int servo_Pin1 = 10, servo_Pin2 = 11;
   float servo1_Angle, servo2_Angle;
 
-  void servo360(float servo1_Angle, float servo2_Angle) {
+    void servo360(float servo1_Angle, float servo2_Angle) {
     static int counter;
 
     counter = (counter <= 360) ? counter + 1 : 0;
     (servo1_Angle) = sin(counter);
     (servo2_Angle) = cos(counter);
   }
+
+    void gyroScope()
 };
 
 Routine servo_Module;
