@@ -3,7 +3,7 @@
 
 void servo360(float *servo1_Angle, float *servo2_Angle);
 
-class Routine() {
+class Routine {
 public:
   Servo servo1, servo2;
   int servo_Pin1 = 10, servo_Pin2 = 11;
@@ -13,24 +13,22 @@ public:
     static int counter;
 
     counter = (counter <= 360) ? counter + 1 : 0;
-    (*servo1_Angle) = sin(counter);
-    (*servo2_Angle) = cos(counter);
+    (servo1_Angle) = sin(counter);
+    (servo2_Angle) = cos(counter);
   }
-
-  
-}
+};
 
 Routine servo_Module;
 
 void setup() {
     Serial.begin(9600);
-    servo1.attach(servo_Module.servo_Pin1);
-    servo2.attach(servo_Module.servo_Pin2);
+    servo_Module.servo1.attach(servo_Module.servo_Pin1);
+    servo_Module.servo2.attach(servo_Module.servo_Pin2);
 }
 
 void loop() {
-    servo_Module.servo360(servo_Module.servo1_Angle, servo_Module.servo2_angle);
-    servo1.write(servo_Module.servo1_Angle);
-    servo2.write(servo_Module.servo2_angle);
+    servo_Module.servo360(servo_Module.servo1_Angle, servo_Module.servo2_Angle);
+    servo_Module.servo1.write(servo_Module.servo1_Angle);
+    servo_Module.servo2.write(servo_Module.servo2_Angle);
     delay(100);
 }
