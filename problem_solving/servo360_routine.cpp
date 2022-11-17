@@ -2,10 +2,10 @@
 #include <Servo.h>
 
 Servo servo1, servo2;
+int servo_Pin1 = 10, servo_Pin2 = 11;
 
 class Routine {
 public:
-  int servo_Pin1 = 10, servo_Pin2 = 11;
   float servo1_Angle, servo2_Angle;
 
   void servo360(float servo1_Angle, float servo2_Angle) {
@@ -21,8 +21,8 @@ Routine servo_Module;
 
 void setup() {
     Serial.begin(9600);
-    servo1.attach(servo_Module.servo_Pin1);
-    servo2.attach(servo_Module.servo_Pin2);
+    servo1.attach(servo_Pin1);
+    servo2.attach(servo_Pin2);
 }
 
 void loop() {
