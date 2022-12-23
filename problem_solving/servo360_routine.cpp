@@ -1,33 +1,34 @@
-#include <math.h>
 #include <Servo.h>
+#include <math.h>
 
-Servo servo1, servo2;
-int servo_Pin1 = 10, servo_Pin2 = 11;
-
-class Routine {
-public:
-  float servo1_Angle, servo2_Angle;
-
-  void servo360(float servo1_Angle, float servo2_Angle) {
-    static int counter;
-
-    counter = (counter <= 360) ? counter + 1 : 0;
-    (servo1_Angle) = sin(counter);
-    (servo2_Angle) = cos(counter);
-  }
-};
-
-Routine servo_Module;
-
+Servo servoR;
+Servo servoO;
+int sPinR = 10;
+int sPinO = 11;
+int i = 3, t = 500;
 void setup() {
-    Serial.begin(9600);
-    servo1.attach(servo_Pin1);
-    servo2.attach(servo_Pin2);
+  servoR.attach(sPinR);
+  servoO.attach(sPinO);
 }
 
 void loop() {
-    servo_Module.servo360(servo_Module.servo1_Angle, servo_Module.servo2_Angle);
-    servo1.write(servo_Module.servo1_Angle);
-    servo2.write(servo_Module.servo2_Angle);
-    delay(100);
+  if(i == 3) {
+    servoR.write(90);
+    servoO.write(90);
+    delay(1000);
+    i = 0;
+  }
+  else if(i == 0) {
+    servoR.write(180*sin((0.09*t)*3.14159265/180));
+    servoO.write(180*sin((0.09*t)*3.14159265/180));
+    i = t == 1000 ? (i == 0 ? 1 : 0) : i;
+    t = t < 1000 ? t + 50 : 0;
+  }
+  else {
+    servoR.write(180*cos((0.09*t)*3.14159265/180));
+    servoO.write(180*cos((0.09*t)*3.14159265/180));
+    i = t == 1000 ? (i == 0 ? 1 : 0) : i;
+    t = t < 1000 ? t + 50 : 0;
+  }
+  delay(50);
 }
