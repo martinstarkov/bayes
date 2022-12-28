@@ -1,3 +1,4 @@
+// Please check this website for more info https://github.com/adafruit/Adafruit_BNO055/blob/master/Adafruit_BNO055.cpp
 class Filter {
 public:
     float kalmanFilterAngle(float mAngle, float mAngVel, float dt) {

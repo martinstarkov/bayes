@@ -1,6 +1,7 @@
 #include <math.h>
 #include "defines.h"
 
+// Please check the following website for more info https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 //Creating a new custom data type Quaternion
 class Quaternion {
 public:

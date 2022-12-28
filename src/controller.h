@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "vector3.h"
 
+//For a better understanding check https://toptechboy.com/9-axis-imu-lesson-25-proportional-control-system-for-self-leveling-platform/
 class Controller {
 public:
     static float rollServoVal = HALF_PI, pitchServoVal = HALF_PI;
