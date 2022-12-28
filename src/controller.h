@@ -1,14 +1,47 @@
-// TODO: Add header include guards.
+#include <math.h>
+#include "defines.h"
+#include "vector3.h"
 
 class Controller {
 public:
-    static float LQR(float angular_position, float angular_velocity) {
-        float U_pos = -TVC_POSITION_GAIN * angular_position;
-        float U_vel = -TVC_VELOCITY_GAIN * angular_velocity;
-        return U_pos + U_vel;
+    static float rollServoVal = HALF_PI, pitchServoVal = HALF_PI;
+    Vector3 PID(float pitchActual, float rollActual, float dt) {
+        Vector3 servoAngle;
+
+        //Measuring all error terms in roll
+        rollErrorOld = rollError;
+        rollError = rollTarget - rollActual;
+        rollErrorChange = rollError - rollErrorOld;
+        rollDerivativeError = rollErrorChange/dt;
+        rollIntegralError = rollIntegralError + rollError*dt;
+
+        //Measuring all error terms in pitch
+        rollErrorOld = rollError;
+        rollError = rollTarget - rollActual;
+        rollErrorChange = rollError - rollErrorOld;
+        rollDerivativeError = rollErrorChange/dt;
+        rollIntegralError = rollIntegralError + rollError*dt;
+
+        //Control servo value
+        rollServoVal = rollServoVal + PROPORTIONAL_GAIN*(rollError) + DERIVATIVE_GAIN*(rollDerivativeError) + INTEGRAL_GAIN*(rollIntegralError);
+        pitchServoVal = pitchServoVal + PROPORTIONAL_GAIN*(pitchError) + DERIVATIVE_GAIN*(pitchDerivativeError) + INTEGRAL_GAIN*(pitchIntegralError);
+        //Limiting the servo values to the maximum angle of EDF.
+        if(abs(rollServoVal) >= MAXIMUM_ANGLE*SERVO_EDF_RATIO1) {
+            rollServoVal = MAXIMUM_ANGLE*SERVO_EDF_RATIO1;
+        }
+        if(abs(pitchServoVal) >= MAXIMUM_ANGLE*SERVO_EDF_RATIO2) {
+            pitchServoVal = MAXIMUM_ANGLE*SERVO_EDF_RATIO2;
+        }
+        servoAngle.x = rollServoVal, servoAngle.y = pitchServoVal, servoAngle.z = 0;
+        servoAngle = servoAngle.toDegrees(servoAngle);
+        return servoAngle;
     }
 private:
-    static constexpr float INTEGRAL_GAIN = 2.0f;
-    static constexpr float TVC_POSITION_GAIN = 0.7278f;
-    static constexpr float TVC_VELOCITY_GAIN = 0.3640f;
+    static float rollTarget = 0.0f, rollError = 0.0f, rollErrorChange = 0.0f, rollDerivativeError = 0.0f, rollIntegralError = 0.0f, rollErrorOld = 0.0f;
+    static float pitchTarget = 0.0f, pitchError = 0.0f, pitchErrorChange = 0.0f, pitchDerivativeError = 0.0f, pitchIntegralError = 0.0f, pitchErrorOld = 0.0f;
+    static constexpr float MAXIMUM_ANGLE = 0.122173f;
+    static constexpr float SERVO_EDF_RATIO1, SERVO_EDF_RATIO2;
+    static constexpr float PROPORTIONAL_GAIN = 0.7278f;
+    static constexpr float DERIVATIVE_GAIN = 2.0f;
+    static constexpr float INTEGRAL_GAIN = 0.3640f;
 };

@@ -1,61 +1,44 @@
 // TODO: Add header include guards.
-
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
+#include "vector3.h"
+#include "quaternion.h"
 
 // Inertial measurement unit (IMU)
 class IMU {
 public:
-    void Init(int32_t sensorID = -1, uint8_t address = 0x28, TwoWire *theWire = &Wire) {
-        bno = Adafruit_BNO055(sensorID, address, theWire);
-        if (!bno.begin()) {
-            /* There was a problem detecting the BNO055 ... check your connections */
-            Serial.println("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-            while (1);
-        }
+    void init() {
+        bayesIMU.begin();        //make sure serial.begin() is set to 115200 before this point.
+        delay(1000);
+        bayesIMU.setExtCrystalUse(true);       //the crystal produces clock signals, so we are using the arduino clk instead of the one in BNO055
     }
-    Vector3 GetOrientation() {
-        sensors_event_t e;
-        bno.getEvent(&e, Adafruit_BNO055::VECTOR_EULER);
-        if (e->type == SENSOR_TYPE_ORIENTATION) {
-            return { e->orientation.x, e->orientation.y, e->orientation.z };
-        }
-        return {};
+
+    Vector3 getOrientation() {
+        Vector3 ori_vector;         //creates a vector3 variable to return
+        imu::Vector<3> ori = bayesIMU.getVector(Adafruit_BNO055::VECTOR_EULER);
+        ori_vector.x = ori.x(), ori_vector.y = ori.y(), ori_vector.z = ori.z();
+        return ori_vector;
     }
-    Vector3 GetAngularVelocity() {
-        sensors_event_t e;
-        bno.getEvent(&e, Adafruit_BNO055::VECTOR_GYROSCOPE);
-        if (e->type == SENSOR_TYPE_GYROSCOPE) {
-            return { e->gyro.x, e->gyro.y, e->gyro.z };
-        }
-        return {};
+
+    Vector3 getAngularVelocity() {
+        Vector3 gyro_vector;        //creates a vector3 variable to return
+        imu::Vector<3> gyro = bayesIMU.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+        gyro_vector.x = gyro.x(), gyro_vector.y = gyro.y(), gyro_vector.z = gyro.z();
+        return gyro_vector;
     }
-    Vector3 GetLinearAcceleration() {
-        sensors_event_t e;
-        bno.getEvent(&e, Adafruit_BNO055::VECTOR_LINEARACCEL);
-        if (e->type == SENSOR_TYPE_LINEAR_ACCELERATION) {
-            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
-        }
-        return {};
+
+    Vector3 getMagnetometer() {
+        Vector3 mag_vector;        //creates a vector3 variable to return
+        imu::Vector<3> mag = bayesIMU.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+        mag_vector.x = mag.x(), mag_vector.y = mag.y(), mag_vector.z = mag.z();
+        return gyro_vector;
     }
-    Vector3 GetGravityAcceleration() {
-        sensors_event_t e;
-        bno.getEvent(&e, Adafruit_BNO055::VECTOR_GRAVITY);
-        if (e->type == SENSOR_TYPE_GRAVITY) {
-            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
-        }
-        return {};
+    Quaternion getQuaternion() {
+        Quaternion quaternion;     //creates a quaternion variable to return
+        imu::Quaternion quat = bayesIMU.getQuat();
+        quaternion.w = quat.w(), quaternion.x = quat.x(), quaternion.y = quat.y(), quaternion.z = quat.z();
+        return quaternion;
     }
-    Vector3 GetAngularAcceleration() {
-        sensors_event_t e;
-        bno.getEvent(&e, Adafruit_BNO055::VECTOR_ACCELEROMETER);
-        if (e->type == SENSOR_TYPE_ACCELEROMETER) {
-            return { e->acceleration.x, e->acceleration.y, e->acceleration.z };
-        }
-        return {};
-    }
-private:
-    Adafruit_BNO055 bno;
 };
