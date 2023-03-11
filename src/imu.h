@@ -35,6 +35,7 @@ public:
         mag_vector.x = mag.x(), mag_vector.y = mag.y(), mag_vector.z = mag.z();
         return gyro_vector;
     }
+    
     Quaternion getQuaternion() {
         Quaternion quaternion;     //creates a quaternion variable to return
         imu::Quaternion quat = bayesIMU.getQuat();
