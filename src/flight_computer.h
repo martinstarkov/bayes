@@ -6,54 +6,54 @@
 #include "filter.h"
 #include "controller.h"
 
-Servo pitchServo, rollServo;
+Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
-public:
-    void init() {
-        Serial.begin(115200);
-        bayes_imu.init();
-        millisNew = millis();
-        bayes_imu.getCalibration();
-        rollServo.attach(11);
-        pitchServo.attach(10);
-    }
-    void update() {
-      //Microcontroller time step calculation
-      millisOld = millisNew;
-      millisNew = millis();
-      dt = (millisNew - millisOld)/1000;
-    
-      //Finding angles data
-      quat = bayes_imu.getQuaternion();
-      angles = quat.anglesToDegrees(quat);
-      gyro = bayes_imu.getAngularVelocity();
-    
-      roll = kal_filter1.kalmanFilterAngle(angles.x, gyro.x, dt);
-      pitch = kal_filter2.kalmanFilterAngle(angles.y, gyro.y, dt);
-      roll_servo = pid_cont1.PID(roll, 1.6f, 0.75f, 1.38f, 0.00005f);
-      pitch_servo = pid_cont2.PID(pitch, 1.8f, 0.75f, 1.38f, 0.00005f);
-      rollServo.write(roll_servo);
-      pitchServo.write(pitch_servo);
-      delay(20);
-      Serial.print(roll);
-      Serial.print(", ");
-      Serial.print(pitch);
-      Serial.print(", ");
-      Serial.print(roll_servo);
-      Serial.print(", ");
-      Serial.println(pitch_servo);
-    }
-private:
-    IMU bayes_imu;
-    Filter kal_filter1, kal_filter2;
-    Controller pid_cont1, pid_cont2;
-    
-    Quaternion quat;
-    Vector3 gyro, angles;
+    private:
+    IMU bayesIMU;
+    Filter pitchKFilter, rollKFilter;
+    Controller pitchPID, rollPID;
+    Quaternion orientation;
+    Vector3 angle, angular_vel;
     float roll, pitch, dt;
     float roll_servo, pitch_servo;
     unsigned long millisNew, millisOld;
+
+    public:
+        void init() {
+            Serial.begin(115200);
+            bayes_imu.init();
+            millisNew = millis();
+            bayes_imu.getCalibration();
+            innerServo.attach(11);
+            outerServo.attach(10);
+        }
+        void update() {
+            //Microcontroller time step calculation
+            millisOld = millisNew;
+            millisNew = millis();
+            dt = (millisNew - millisOld)/1000;
+            
+            //Finding angles data
+            orientation = bayesIMU.getQuaternion();
+            angle = orientation.toDegrees();
+            angular_vel = bayesIMU.getAngularVelocity();
+            
+            roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
+            pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
+            roll_servo = rollPID.servoPID(roll, 1.6f, 0.75f, 1.38f, 0.00005f);
+            pitch_servo = pitchPID.servoPID(pitch, 1.8f, 0.75f, 1.38f, 0.00005f);
+            innerServo.write(roll_servo);
+            outerServo.write(pitch_servo);
+            delay(20);
+            Serial.print(roll);
+            Serial.print(", ");
+            Serial.print(pitch);
+            Serial.print(", ");
+            Serial.print(roll_servo);
+            Serial.print(", ");
+            Serial.println(pitch_servo);
+        }
 };
 
 #endif

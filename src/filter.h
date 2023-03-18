@@ -3,12 +3,14 @@
 
 class Filter {
 public:
-  float kalmanFilterAngle(float mAngle, float mAngVel, float dt) {
+  float filterAngle(float mAngle, float mAngVel, float dt) {
     //angle: predicted angle, bias: predicted bias, y: error between real and predicted angle by k.filter
     static float angVel = 0.0f, angle = 0.0f, bias = 0.0f, y = 0.0f;
+
     //Certain biases and innovation covariance used during prediction process.
     //Specified values are optimal. For more info check http://blog.tkjelectronics.dk/2012/09/a-practical-approach-to-kalman-filter-and-how-to-implement-it/
     static float Q_angle = 0.001f, Q_bias = 0.003f, R = 0.03f, S = 0.0f;
+    
     //P: error covariance matrix, K: Kalman filter gains, P00_temp and P01_temp: process constants
     static float P[2][2] = {{0.0f, 0.0f}, {0.0f, 0.0f}}, K[2] = {0.0f, 0.0f}, P00_temp = 0.0f, P01_temp = 0.0f;
   
