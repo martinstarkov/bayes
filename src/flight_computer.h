@@ -1,8 +1,8 @@
 #ifndef FLIGHTCOMPUTER_H
 #define FLIGHTCOMPUTER_H
 
-#include <Servo.h>
-#include "imu.h"
+#include "initial.h"
+#include "sensor.h"
 #include "filter.h"
 #include "controller.h"
 
@@ -10,7 +10,8 @@ Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
     private:
-    IMU bayesIMU;
+    Sensor bayesSensor;
+    StartSequence backInBlack;
     Filter pitchKFilter, rollKFilter;
     Controller pitchPID, rollPID;
     Quaternion orientation;
@@ -21,13 +22,18 @@ class FlightComputer {
 
     public:
         void init() {
-            Serial.begin(115200);
-            bayes_imu.init();
+            Serial.begin(115200); 
+            bayesSensor.imuInit();
+            bayesSensor.bmpInit();
+
+            outerServo.attach(10);      //Servo1 pins   
+            innerServo.attach(11);      //Servo2 pins
+            backInBlack.init();
+            
             millisNew = millis();
-            bayes_imu.getCalibration();
-            innerServo.attach(11);
-            outerServo.attach(10);
+            bayesSensor.getCalibration();
         }
+
         void update() {
             //Microcontroller time step calculation
             millisOld = millisNew;
@@ -35,9 +41,9 @@ class FlightComputer {
             dt = (millisNew - millisOld)/1000;
             
             //Finding angles data
-            orientation = bayesIMU.getQuaternion();
+            orientation = bayesSensor.getQuaternion();
             angle = orientation.toDegrees();
-            angular_vel = bayesIMU.getAngularVelocity();
+            angular_vel = bayesSensor.getAngularVelocity();
             
             roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
             pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
