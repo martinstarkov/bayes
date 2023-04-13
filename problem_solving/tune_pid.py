@@ -29,18 +29,33 @@ def tvc_dynamics(Kp, Ki, Kd, initial, transient, edf_thrust, x_com, moi):
         pitch.append(pitch1)
         tvc_pitch.append(Kp*pitch[i+1] + Kd*(pitch[i+1] - pitch[i])/dt + Ki*pitch[i+1]*dt)
         time.append(time[i] + dt)
-
     return time, pitch, thrust, ang_vel, ang_acc
 
-Kp = -0.5
-Ki = 0
-Kd = -0.5/7
-
 run_time = 1.5
-start_pitch = 10
+start_pitch = 30
 edf_thrust = 4*9.81
 distance_from_com = 0.1
 moment_of_inertia = 0.002
+
+# Kp = np.arange(0.1, 0.7, 0.1)
+# Ki = np.arange(0.0001, 0.001, 0.0001)
+# Kd = np.arange(0.01, 0.015, 0.001)
+# old_error = 100000000
+# Kp_ideal, Ki_ideal, Kd_ideal = 0, 0, 0
+# for i in range(len(Kp)):
+#     for j in range(len(Ki)):
+#         for k in range(len(Kd)):
+#             time, pitch, thrust, ang_vel, ang_acc = tvc_dynamics(Kp[i], Ki[j], Kd[k], start_pitch, run_time, edf_thrust, distance_from_com, moment_of_inertia)
+#             error = sum(pitch)
+#             if (error < old_error):
+#                 old_error = error
+#                 Kp_ideal, Ki_ideal, Kd_ideal = Kp[i], Ki[j], Kd[k]
+
+# print(f'{Kp_ideal}, {Ki_ideal}, {Kd_ideal}')
+
+Kp = -0.1
+Ki = -0.01
+Kd = -0.01
 
 time, pitch, thrust, ang_vel, ang_acc = tvc_dynamics(Kp, Ki, Kd, start_pitch, run_time, edf_thrust, distance_from_com, moment_of_inertia)
 plt.plot(time, pitch, color=(0.5, 0.7, 1.0))
