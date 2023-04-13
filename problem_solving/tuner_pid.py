@@ -65,29 +65,29 @@ class PID_tuner:
 
 #Please insert simulation conditions here:
 run_time = 1.5
-start_pitch = 2
-edf_thrust = 2
-distance_from_com = 0.3
-moment_of_inertia = 0.02
+start_pitch = 10
+edf_thrust = 4*9.81
+distance_from_com = 0.1
+moment_of_inertia = 0.002
 
 #Simlation runs here. Please do not change these settings here:
 Simulation = PID_tuner(run_time, start_pitch, edf_thrust, distance_from_com, moment_of_inertia)
 loss1, Kp1, Ki1, Kd1 = Simulation.gradient_descent([0.1, 0.001, 0.01], 0.0001, 1000)
-loss2, Kp2, Ki2, Kd2 = Simulation.gradient_descent([0.1, 0.001, 0.01], 0.0001, 10000)
-loss3, Kp3, Ki3, Kd3 = Simulation.gradient_descent([0.1, 0.001, 0.01], 0.0001, 100000)
+#loss2, Kp2, Ki2, Kd2 = Simulation.gradient_descent([0.1, 0.001, 0.01], 0.0001, 10000)
+#loss3, Kp3, Ki3, Kd3 = Simulation.gradient_descent([0.1, 0.001, 0.01], 0.0001, 100000)
 
 print(f'{loss1}, {Kp1}, {Ki1}, {Kd1}')
-print(f'{loss2}, {Kp2}, {Ki2}, {Kd2}')
-print(f'{loss3}, {Kp3}, {Ki3}, {Kd3}')
+#print(f'{loss2}, {Kp2}, {Ki2}, {Kd2}')
+#print(f'{loss3}, {Kp3}, {Ki3}, {Kd3}')
 
 time1, pitch1, thrust1, ang_vel1, ang_acc1 = Simulation.tvc_dynamics(Kp1, Ki1, Kd1)
-time2, pitch2, thrust2, ang_vel2, ang_acc2 = Simulation.tvc_dynamics(Kp2, Ki2, Kd2)
-time3, pitch3, thrust3, ang_vel3, ang_acc3 = Simulation.tvc_dynamics(Kp3, Ki3, Kd3)
+#time2, pitch2, thrust2, ang_vel2, ang_acc2 = Simulation.tvc_dynamics(Kp2, Ki2, Kd2)
+#time3, pitch3, thrust3, ang_vel3, ang_acc3 = Simulation.tvc_dynamics(Kp3, Ki3, Kd3)
 
 #A graph is generated here:
 plt.plot(time1, pitch1, color=(0.5, 0.7, 1.0), label='1000 iterations')
-plt.plot(time2, pitch2, color=(0.2, 0.4, 0.8), label='10000 iterations')
-plt.plot(time3, pitch3, color=(0.0, 0.2, 0.6), label='100000 iterations')
+#plt.plot(time2, pitch2, color=(0.2, 0.4, 0.8), label='10000 iterations')
+#plt.plot(time3, pitch3, color=(0.0, 0.2, 0.6), label='100000 iterations')
 plt.xlabel('Time (s)')
 plt.ylabel('Pitch (Degrees)')
 plt.legend()
