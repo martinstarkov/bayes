@@ -10,23 +10,16 @@
 #include "quaternion.h"
 
 // Inertial measurement unit (IMU)
-class Sensor {
+class IMU {
 private:
     Adafruit_BMP280 bmp;
     Adafruit_BNO055 imu = Adafruit_BNO055();
 
 public:
-    void imuInit() {
+    void init() {
         imu.begin();        //make sure serial.begin() is set to 115200 before this point.
         delay(1000);
         imu.setExtCrystalUse(true);       //the crystal produces clock signals, so we are using the arduino clk instead of the one in BNO055
-    }
-
-    void bmpInit(uint8_t address) {
-        if (!bmp.begin(address)) {
-            Serial.println(F("Could not find a valid BMP280 sensor, check wiring"));
-            while (1);
-        }
     }
 
     void getCalibration() {
@@ -84,4 +77,13 @@ public:
     }
 };
 
+class BMP {
+    
+    void bmpInit(uint8_t address) {
+        if (!bmp.begin(address)) {
+            Serial.println(F("Could not find a valid BMP280 sensor, check wiring"));
+            while (1);
+        }
+    }
+};
 #endif
