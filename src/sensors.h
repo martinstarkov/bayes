@@ -85,7 +85,6 @@ public:
         return Quaternion(quat.w(), quat.x(), quat.y(), quat.z());
     }
 
-    // Dat aquired as 1) tempreature 2) pressure reading 3) alltitude
     Vector3 getBMPReading() {
         return Vector3(bayesBMP.readTemperature(), bayesBMP.readPressure(), bayesBMP.readAltitude(1013.25););
     }
