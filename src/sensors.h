@@ -12,14 +12,14 @@
 // Inertial measurement unit (IMU)
 class Sensor {
 private:
-    Adafruit_BMP280 bayesBMP;
-    Adafruit_BNO055 bayesIMU = Adafruit_BNO055();
+    Adafruit_BMP280 bmp;
+    Adafruit_BNO055 imu = Adafruit_BNO055();
 
 public:
     void imuInit() {
-        bayesIMU.begin();        //make sure serial.begin() is set to 115200 before this point.
+        imu.begin();        //make sure serial.begin() is set to 115200 before this point.
         delay(1000);
-        bayesIMU.setExtCrystalUse(true);       //the crystal produces clock signals, so we are using the arduino clk instead of the one in BNO055
+        imu.setExtCrystalUse(true);       //the crystal produces clock signals, so we are using the arduino clk instead of the one in BNO055
     }
 
     void bmpInit(uint8_t address) {
@@ -33,11 +33,11 @@ public:
         static int counter = 0;
         int system, gyros, accel, mg = 0;
 
-        bayesIMU.getCalibration(&system, &gyros, &accel, &mg);
+        imu.getCalibration(&system, &gyros, &accel, &mg);
         Serial.println("Calibrating...");
         while ((gyros != 3) or (accel != 3)) {
             counter += 1;
-            bayesIMU.getCalibration(&system, &gyros, &accel, &mg);
+            imu.getCalibration(&system, &gyros, &accel, &mg);
             delay(1000);
             Serial.print(counter);
             Serial.print(" -> ");
@@ -54,27 +54,27 @@ public:
     }
   
     Vector3 getOrientation() {
-        imu::Vector<3> ori = bayesIMU.getVector(Adafruit_BNO055::VECTOR_EULER);
+        imu::Vector<3> ori = imu.getVector(Adafruit_BNO055::VECTOR_EULER);
         return Vector3(ori.x(), ori.y(), ori.z(););
     }
 
     Vector3 getAcceleration() {
-        imu::Vector<3> acc = bayesIMU.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+        imu::Vector<3> acc = imu.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
         return Vector3(acc.x(), acc.y(), acc.z(););
     }
     
     Vector3 getAngularVelocity() {
-        imu::Vector<3> gyro = bayesIMU.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+        imu::Vector<3> gyro = imu.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
         return Vector3(gyro.x(), gyro.y(), gyro.z());
     }
     
     Vector3 getMagnetometer() {
-        imu::Vector<3> mag = bayesIMU.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
+        imu::Vector<3> mag = imu.getVector(Adafruit_BNO055::VECTOR_MAGNETOMETER);
         return Vector3(mag.x(), mag.y(), mag.z());
     }
     
     Quaternion getQuaternion() {
-        imu::Quaternion quat = bayesIMU.getQuat();
+        imu::Quaternion quat = imu.getQuat();
         return Quaternion(quat.w(), quat.x(), quat.y(), quat.z());
     }
 
