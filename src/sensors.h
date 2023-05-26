@@ -14,8 +14,11 @@ class IMU {
 private:
     Adafruit_BMP280 bmp;
     Adafruit_BNO055 imu = Adafruit_BNO055();
+    bool calibration_state;
 
 public:
+    IMU(bool state) : calibration_state(state) {}
+    
     void init() {
         imu.begin();        //make sure serial.begin() is set to 115200 before this point.
         delay(1000);
