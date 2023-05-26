@@ -2,8 +2,18 @@
 #define CONTROLLER_H
 
 #include <math.h>
-class Controller {
+class PID {
+  float Kp;
+  float Ki;
+  float Kd;
+  float error;
+  float differential_error;
+  float derivative error;
+  float integral_error;
+  
 public:
+  PID(float new_Kp, float new_Ki, float new_Kd): Kp(new_Kp)
+  
   float servoPID(float sensor_data, float Kp, float Ki, float Kd) {
     static float angle = 90, nominal_angle = 90, max_offset = 7, dt = 0.001; //In radians 7 is 0.122173
     static float error = 0.0f, old_error = 0.0f, error_differential = 0.0f, error_derivative = 0.0f, error_integral = 0.0f;
