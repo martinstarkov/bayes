@@ -12,7 +12,8 @@
 // Inertial measurement unit (IMU)
 class IMU {
     Adafruit_BNO055 imu = Adafruit_BNO055();
-    bool calibration_state;
+    bool calibration_state = false;
+    int calibration_timer = 10;
 
 public:
     IMU(bool state) : calibration_state(state) {}
