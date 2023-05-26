@@ -11,13 +11,12 @@
 
 // Inertial measurement unit (IMU)
 class IMU {
-private:
-    Adafruit_BMP280 bmp;
     Adafruit_BNO055 imu = Adafruit_BNO055();
     bool calibration_state;
 
 public:
     IMU(bool state) : calibration_state(state) {}
+    ~IMU() {}
     
     void init() {
         imu.begin();        //make sure serial.begin() is set to 115200 before this point.
@@ -81,7 +80,9 @@ public:
 };
 
 class BMP {
+    Adafruit_BMP280 bmp;
     
+    public:
     void bmpInit(uint8_t address) {
         if (!bmp.begin(address)) {
             Serial.println(F("Could not find a valid BMP280 sensor, check wiring"));
