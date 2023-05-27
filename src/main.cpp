@@ -8,5 +8,5 @@ void setup() {
 }
 
 void  loop() {
-  fc.update();
+  fc.loop();
 }
