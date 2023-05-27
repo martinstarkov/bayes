@@ -10,7 +10,7 @@ Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
     private:
-    IMU bayesIMU;
+    IMU bayesIMU(false);
     Gimble gimble;
     Filter pitchKFilter, rollKFilter;
     PID pitchPID, rollPID;
@@ -23,7 +23,7 @@ class FlightComputer {
     public:
         void init() {
             Serial.begin(115200); 
-            bayesSensor.imuInit();
+            bayesIMU.init();
             bayesSensor.bmpInit();
 
             outerServo.attach(10);      //Servo1 pins   
