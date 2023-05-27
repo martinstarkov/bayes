@@ -9,7 +9,6 @@
 Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
-    private:
     outerServo.attach(10);      //Servo1 pins   
     innerServo.attach(11);      //Servo2 pins
     
@@ -32,7 +31,7 @@ class FlightComputer {
             millisNew = millis();
         }
 
-        void update() {
+        void loop() {
             //Microcontroller time step calculation
             millisOld = millisNew;
             millisNew = millis();
