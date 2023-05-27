@@ -12,8 +12,32 @@ private:
     outerServo.attach(10);  
     innerServo.attach(11);
     
+    float sequence1(int t, int T) {
+        return 90*(1-cos((2*PI*t)/T)); 
+    }
+
+    float sequence2(int t, int T) {
+        return 90*(1+sin((2*PI*t)/T));
+    }
     
 public:
+    void init() {
+        innerServo.write(90);
+        outerServo.write(90);
+    }
+    
+    void test_innerROM() {
+        int static counter = 0;
+        int static angle = 0;
+        while (counter < rom_duration) {
+            angle = sequence1(counter, rom_duration);
+            innerServo.write(angle);
+            counter++;
+            delay(1);
+        }
+    }
+    
+    
     void init() {
         delay(2000);
         
@@ -26,9 +50,7 @@ public:
         // Move both servos to starting position and rotate 360 degrees
         moveBothServos(&StartSequence::romSequence1, &StartSequence::romSequence2, 5000, 1000);
     }
-
-private:
-
+    
     // Check the range of motion of a servo
     void checkRangeOfMotion(Servo& servo, float (StartSequence::*romSequence)(int, int), int tMax, int T) {
         int t = 0;
@@ -56,13 +78,7 @@ private:
         innerServo.write(90);
     }
 
-    float romSequence1(int t, int T) {
-        return 90*(1-cos((2*PI*t)/T));
-    }
 
-    float romSequence2(int t, int T) {
-        return 90*(1+sin((2*PI*t)/T));
-    }
 };
 
 #endif
