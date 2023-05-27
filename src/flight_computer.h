@@ -10,8 +10,8 @@ Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
     private:
-    Sensor bayesSensor;
-    StartSequence backInBlack;
+    IMU bayesIMU;
+    Gimble backInBlack;
     Filter pitchKFilter, rollKFilter;
     Controller pitchPID, rollPID;
     Quaternion orientation;
