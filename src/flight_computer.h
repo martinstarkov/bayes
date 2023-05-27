@@ -13,11 +13,11 @@ class FlightComputer {
     innerServo.attach(11);      //Servo2 pins
     
     IMU bayesIMU(false);
+    PID pitchPID(0.1, 0.01, 0.01, 7);
+    PID rollPID(0.1, 0.01, 0.01, 7);
     Gimble gimble;
     Filter pitchKFilter;
     Filter rollKFilter;
-    PID pitchPID(0.1, 0.01, 0.01, 7);
-    PID rollPID(0.1, 0.01, 0.01, 7);
     Quaternion orientation;
     Vector3 angle, ang_vel;
     float roll, pitch, dt;
@@ -34,15 +34,13 @@ class FlightComputer {
         }
 
         void loop() {
-            //Microcontroller time step calculation
             millisOld = millisNew;
             millisNew = millis();
             dt = (millisNew - millisOld)/1000;
             
-            //Finding angles data
-            orientation = bayesSensor.getQuaternion();
+            orientation = bayesIMU.getQuaternion();
             angle = orientation.toDegrees();
-            angular_vel = bayesSensor.getAngularVelocity();
+            ang_vel = bayesIMU.getAngularVelocity();
             
             roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
             pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
