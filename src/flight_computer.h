@@ -24,6 +24,19 @@ class FlightComputer {
     float roll_servo, pitch_servo;
     unsigned long millisNew, millisOld;
     float dt;
+    
+    void print() {
+        Serial.print("Filtered Sensor Data: roll = ");
+        Serial.print(roll);
+        Serial.print(", pitch = ");
+        Serial.print(pitch);
+        Serial.println(".");
+        Serial.print("PID Output: roll = ");
+        Serial.print(roll_servo);
+        Serial.print(", pitch = ");
+        Serial.println(pitch_servo);
+        Serial.println(".");
+    }
 
     public:
         void init() {
@@ -45,18 +58,12 @@ class FlightComputer {
             
             roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
             pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
-            roll_servo = rollPID.servoPID();
-            pitch_servo = pitchPID.servoPID(pitch, 1.8f, 0.75f, 1.38f, 0.00005f);
+            roll_servo = 90 + rollPID.controller(roll);
+            pitch_servo = 90 + pitchPID.controller(pitch)
             innerServo.write(roll_servo);
             outerServo.write(pitch_servo);
             delay(20);
-            Serial.print(roll);
-            Serial.print(", ");
-            Serial.print(pitch);
-            Serial.print(", ");
-            Serial.print(roll_servo);
-            Serial.print(", ");
-            Serial.println(pitch_servo);
+
         }
 };
 
