@@ -21,8 +21,8 @@ private:
     }
     
     void test_ROM(Servo& servo) {
-        int static counter = 0;
-        int static angle = 0;
+        static int counter = 0;
+        static int angle = 0;
         servo.write(0);
         while (counter < rom_duration) {
             angle = sequence1(counter, rom_duration);
@@ -40,9 +40,9 @@ public:
     }
     
     void testROM() {
-        int static counter = 0;
-        int static innerAngle = 0;
-        int static outerAngle = 0;
+        static int counter = 0;
+        static int innerAngle = 0;
+        static int outerAngle = 0;
         innerServo.write(0);
         outerServo.write(90);
         while(counter < rev_duration) {
