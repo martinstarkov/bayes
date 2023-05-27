@@ -27,9 +27,9 @@ class FlightComputer {
         void init() {
             Serial.begin(115200); 
             bayesIMU.init();
-            gimble.ROM();
+            gimble.testROM();
             millisNew = millis();
-            bayesSensor.getCalibration();
+            bayesIMU.calibrate();
         }
 
         void update() {
