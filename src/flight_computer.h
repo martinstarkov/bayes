@@ -11,11 +11,11 @@ Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 class FlightComputer {
     private:
     IMU bayesIMU;
-    Gimble backInBlack;
+    Gimble gimble;
     Filter pitchKFilter, rollKFilter;
-    Controller pitchPID, rollPID;
+    PID pitchPID, rollPID;
     Quaternion orientation;
-    Vector3 angle, angular_vel;
+    Vector3 angle, ang_vel;
     float roll, pitch, dt;
     float roll_servo, pitch_servo;
     unsigned long millisNew, millisOld;
