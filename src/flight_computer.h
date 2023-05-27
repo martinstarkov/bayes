@@ -60,8 +60,8 @@ class FlightComputer {
             angle = orientation.toDegrees();
             ang_vel = bayesIMU.getAngularVelocity();
             
-            roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
-            pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
+            roll = rollKFilter.filterAngle(angle.x, ang_vel.x, dt);
+            pitch = pitchKFilter.filterAngle(angle.y, ang_vel.y, dt);
             roll_servo = 90 + rollPID.controller(roll);
             pitch_servo = 90 + pitchPID.controller(pitch);
             innerServo.write(roll_servo);
