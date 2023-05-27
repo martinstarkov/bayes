@@ -23,6 +23,7 @@ private:
     void test_ROM(Servo& servo) {
         int static counter = 0;
         int static angle = 0;
+        servo.write(0);
         while (counter < rom_duration) {
             angle = sequence1(counter, rom_duration);
             servo.write(angle);
@@ -38,6 +39,23 @@ public:
         outerServo.write(90);
     }
     
+    void testROM() {
+        int static counter = 0;
+        int static innerAngle = 0;
+        int static outerAngle = 0;
+        innerServo.write(0);
+        outerServo.write(90);
+        while(counter < rev_duration) {
+            innerAngle = sequence1(counter, rom_duration);
+            outerAangle = sequence2(counter, rom_duration);
+            innerServo.write(innerAngle);
+            outerServo.write(outerAngle);
+            counter++;
+            delay(1);
+        }
+        init();
+    }
+    
     void innerROM() {
         test_ROM(innerServo);
     }
@@ -45,52 +63,6 @@ public:
     void outerROM() {
         test_ROM(outerServo);
     }
-    
-    void testROM() {
-        
-    }
-    
-    void init() {
-        delay(2000);
-        
-        // Check outer servo's range of motion
-        checkRangeOfMotion(outerServo, &StartSequence::romSequence2, 1250, 1250);
-        
-        // Check inner servo's range of motion
-        checkRangeOfMotion(innerServo, &StartSequence::romSequence2, 1000, 1000);
-        
-        // Move both servos to starting position and rotate 360 degrees
-        moveBothServos(&StartSequence::romSequence1, &StartSequence::romSequence2, 5000, 1000);
-    }
-    
-    // Check the range of motion of a servo
-    void checkRangeOfMotion(Servo& servo, float (StartSequence::*romSequence)(int, int), int tMax, int T) {
-        int t = 0;
-        servo.write(0);
-        while (t <= tMax) {
-            servo.write((this->*romSequence)(t, T));
-            t += 1;
-            delay(1);
-        }
-        servo.write(90);
-    }
-
-    // Move both servos to starting position and rotate 360 degrees
-    void moveBothServos(float (StartSequence::*romSequence1)(int, int), float (StartSequence::*romSequence2)(int, int), int tMax, int T) {
-        int t = 0;
-        outerServo.write(90);
-        innerServo.write(0);
-        while (t < tMax) {
-            innerServo.write((this->*romSequence1)(t, T));
-            outerServo.write((this->*romSequence2)(t, T));
-            t += 1;
-            delay(1);
-        }
-        outerServo.write(90);
-        innerServo.write(90);
-    }
-
-
 };
 
 #endif
