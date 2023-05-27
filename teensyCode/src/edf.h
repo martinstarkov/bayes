@@ -3,5 +3,8 @@
 
 #include <Servo.h>
 
+class EDF {
+    
+};
 
 #endif
