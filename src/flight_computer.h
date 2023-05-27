@@ -45,7 +45,7 @@ class FlightComputer {
             
             roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
             pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
-            roll_servo = rollPID.servoPID(roll, 1.6f, 0.75f, 1.38f, 0.00005f);
+            roll_servo = rollPID.servoPID();
             pitch_servo = pitchPID.servoPID(pitch, 1.8f, 0.75f, 1.38f, 0.00005f);
             innerServo.write(roll_servo);
             outerServo.write(pitch_servo);
