@@ -5,7 +5,7 @@
 
 Servo outerServo, innerServo;
 
-class start {
+class Gimble {
 private:
     int rom_duration = 1000;
     int rev_duration = 5000;
@@ -20,23 +20,35 @@ private:
         return 90*(1+sin((2*PI*t)/T));
     }
     
+    void test_ROM(Servo& servo) {
+        int static counter = 0;
+        int static angle = 0;
+        while (counter < rom_duration) {
+            angle = sequence1(counter, rom_duration);
+            servo.write(angle);
+            counter++;
+            delay(1);
+        }
+        init();
+    }
+    
 public:
     void init() {
         innerServo.write(90);
         outerServo.write(90);
     }
     
-    void test_innerROM() {
-        int static counter = 0;
-        int static angle = 0;
-        while (counter < rom_duration) {
-            angle = sequence1(counter, rom_duration);
-            innerServo.write(angle);
-            counter++;
-            delay(1);
-        }
+    void innerROM() {
+        test_ROM(innerServo);
     }
     
+    void outerROM() {
+        test_ROM(outerServo);
+    }
+    
+    void testROM() {
+        
+    }
     
     void init() {
         delay(2000);
