@@ -3,13 +3,19 @@
 
 #include <Servo.h>
 
-Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
+Servo outerServo, innerServo;
 
-class StartSequence {
+class start {
+private:
+    int rom_duration = 1000;
+    int rev_duration = 5000;
+    outerServo.attach(10);  
+    innerServo.attach(11);
+    
+    
 public:
     void init() {
-        initServos();
-        delay(2000);    // The calm before the storm    
+        delay(2000);
         
         // Check outer servo's range of motion
         checkRangeOfMotion(outerServo, &StartSequence::romSequence2, 1250, 1250);
@@ -22,11 +28,6 @@ public:
     }
 
 private:
-    // Initialize the servos
-    void initServos() {
-        outerServo.attach(10);      //Servo1 pins   
-        innerServo.attach(11);      //Servo2 pins
-    }
 
     // Check the range of motion of a servo
     void checkRangeOfMotion(Servo& servo, float (StartSequence::*romSequence)(int, int), int tMax, int T) {
@@ -55,12 +56,10 @@ private:
         innerServo.write(90);
     }
 
-    // Individual servo range of motion check
     float romSequence1(int t, int T) {
         return 90*(1-cos((2*PI*t)/T));
     }
 
-    // Both servo's range of motion check - 360 rotation
     float romSequence2(int t, int T) {
         return 90*(1+sin((2*PI*t)/T));
     }
