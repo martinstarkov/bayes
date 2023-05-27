@@ -20,9 +20,10 @@ class FlightComputer {
     Filter rollKFilter;
     Quaternion orientation;
     Vector3 angle, ang_vel;
-    float roll, pitch, dt;
+    float roll, pitch;
     float roll_servo, pitch_servo;
     unsigned long millisNew, millisOld;
+    float dt;
 
     public:
         void init() {
