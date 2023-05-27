@@ -9,56 +9,66 @@
 Servo outerServo, innerServo;   //outer servo = pitch, inner servo = roll
 
 class FlightComputer {
-    private:
-    Sensor bayesSensor;
-    StartSequence backInBlack;
-    Filter pitchKFilter, rollKFilter;
-    Controller pitchPID, rollPID;
+    outerServo.attach(10);      //Servo1 pins   
+    innerServo.attach(11);      //Servo2 pins
+    
+    IMU bayesIMU(false);
+    PID pitchPID(0.1, 0.01, 0.01, 7);
+    PID rollPID(0.1, 0.01, 0.01, 7);
+    Gimble gimble;
+    Filter pitchKFilter;
+    Filter rollKFilter;
     Quaternion orientation;
-    Vector3 angle, angular_vel;
-    float roll, pitch, dt;
+    Vector3 angle, ang_vel;
+    float roll, pitch;
     float roll_servo, pitch_servo;
     unsigned long millisNew, millisOld;
+    float dt;
+    
+    void print(bool condition) {
+        if(condition) {
+            Serial.print("Filtered Sensor Data: roll = ");
+            Serial.print(roll);
+            Serial.print(", pitch = ");
+            Serial.print(pitch);
+            Serial.println(".");
+            Serial.print("PID Output: roll = ");
+            Serial.print(roll_servo);
+            Serial.print(", pitch = ");
+            Serial.println(pitch_servo);
+            Serial.println(".");
+        }
+        else {
+        }
+    }
 
     public:
         void init() {
             Serial.begin(115200); 
-            bayesSensor.imuInit();
-            bayesSensor.bmpInit();
-
-            outerServo.attach(10);      //Servo1 pins   
-            innerServo.attach(11);      //Servo2 pins
-            backInBlack.init();
-            
+            bayesIMU.init();
+            bayesIMU.calibrate();
+            gimble.testROM();
             millisNew = millis();
-            bayesSensor.getCalibration();
         }
 
-        void update() {
-            //Microcontroller time step calculation
+        void loop() {
             millisOld = millisNew;
             millisNew = millis();
             dt = (millisNew - millisOld)/1000;
             
-            //Finding angles data
-            orientation = bayesSensor.getQuaternion();
+            orientation = bayesIMU.getQuaternion();
             angle = orientation.toDegrees();
-            angular_vel = bayesSensor.getAngularVelocity();
+            ang_vel = bayesIMU.getAngularVelocity();
             
-            roll = rollKFilter.filterAngle(angle.x, angular_vel.x, dt);
-            pitch = pitchKFilter.filterAngle(angle.y, angular_vel.y, dt);
-            roll_servo = rollPID.servoPID(roll, 1.6f, 0.75f, 1.38f, 0.00005f);
-            pitch_servo = pitchPID.servoPID(pitch, 1.8f, 0.75f, 1.38f, 0.00005f);
+            roll = rollKFilter.filterAngle(angle.x, ang_vel.x, dt);
+            pitch = pitchKFilter.filterAngle(angle.y, ang_vel.y, dt);
+            roll_servo = 90 + rollPID.controller(roll);
+            pitch_servo = 90 + pitchPID.controller(pitch);
             innerServo.write(roll_servo);
             outerServo.write(pitch_servo);
+            print(true);
             delay(20);
-            Serial.print(roll);
-            Serial.print(", ");
-            Serial.print(pitch);
-            Serial.print(", ");
-            Serial.print(roll_servo);
-            Serial.print(", ");
-            Serial.println(pitch_servo);
+
         }
 };
 

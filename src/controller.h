@@ -2,26 +2,39 @@
 #define CONTROLLER_H
 
 #include <math.h>
-class Controller {
+class PID {
+  float Kp;
+  float Ki;
+  float Kd;
+  float error = 0f;
+  float differential_error = 0f;
+  float derivative_error = 0f;
+  float integral_error = 0f;
+  float dt = 0.001;
+  float offset;
+
 public:
-  float servoPID(float sensor_data, float Kp, float Ki, float Kd) {
-    static float angle = 90, nominal_angle = 90, max_offset = 7, dt = 0.001; //In radians 7 is 0.122173
-    static float error = 0.0f, old_error = 0.0f, error_differential = 0.0f, error_derivative = 0.0f, error_integral = 0.0f;
-
-    //Measuring all error terms in angles
-    old_error = error;
-    error = 0.0f - sensor_data;
-    error_differential = error - old_error;
-    error_derivative = error_differential/dt;
-    error_integral = error_integral + error*dt;
-
-    //Control servo value
-    angle = angle + Kp*error + Ki*(error_integral) + Kd*(error_derivative);
-    //Limiting the servo values to the maximum angle of EDF.
-    if(abs(angle) > nominal_angle + max_offset) {
-        angle = 90 + nominal_angle + max_offset;
+  PID(float new_Kp, float new_Ki, float new_Kd, float new_offset): Kp(new_Kp), Ki(new_Ki), Kd(new_Kd), offset(new_offset) {}
+  ~PID() {}
+  
+  float controller(float sensor_data) {
+    differential_error = -(sensor_data + error);
+    derivative_error = differential_error/dt;
+    integral_error = integral_error - sensor_data*dt;
+    error = -sensor_data;
+    
+    output = Kp*error + Ki*(integral_error) + Kd*(derivative_error);
+    output = bounds_check();
+    return output;
+  }
+  
+  float bounds_check() {
+    if(abs(output) > offset) {
+      return offset;
     }
-    return angle;
+    else {
+      return output;
+    }
   }
 };
 
