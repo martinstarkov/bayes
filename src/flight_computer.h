@@ -16,8 +16,8 @@ class FlightComputer {
     Gimble gimble;
     Filter pitchKFilter;
     Filter rollKFilter;
-    PID pitchPID(0.1, 0.01, 0.01);
-    PID rollPID(0.1, 0.01, 0.01);
+    PID pitchPID(0.1, 0.01, 0.01, 7);
+    PID rollPID(0.1, 0.01, 0.01, 7);
     Quaternion orientation;
     Vector3 angle, ang_vel;
     float roll, pitch, dt;
