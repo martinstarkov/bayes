@@ -58,7 +58,8 @@ public:
             case false;
                 Serial.println("Calibration turned off.");
                 break;
-    }
+        }
+    }   
   
     Vector3 getOrientation() {
         imu::Vector<3> ori = imu.getVector(Adafruit_BNO055::VECTOR_EULER);

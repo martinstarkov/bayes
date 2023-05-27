@@ -10,6 +10,7 @@ class PID {
   float differential_error = 0f;
   float derivative_error = 0f;
   float integral_error = 0f;
+  float output = 0.0f;
   float dt = 0.001;
   float offset;
 

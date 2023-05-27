@@ -1,5 +1,5 @@
-#ifndef INITIAL_H
-#define INITIAL_H
+#ifndef GIMBLE_H
+#define GIMBLE_H
 
 #include <Servo.h>
 
@@ -20,7 +20,7 @@ private:
         return 90*(1+sin((2*PI*t)/T));
     }
     
-    void test_ROM(Servo& servo) {
+    void singleROM(Servo& servo) {
         static int counter = 0;
         static int angle = 0;
         servo.write(0);
@@ -57,11 +57,11 @@ public:
     }
     
     void innerROM() {
-        test_ROM(innerServo);
+        singleROM(innerServo);
     }
     
     void outerROM() {
-        test_ROM(outerServo);
+        singleROM(outerServo);
     }
 };
 
