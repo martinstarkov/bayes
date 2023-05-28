@@ -10,6 +10,7 @@ class PID {
   float differential_error = 0f;
   float derivative_error = 0f;
   float integral_error = 0f;
+  float output = 0.0f;
   float dt = 0.001;
   float offset;
 
@@ -30,7 +31,12 @@ public:
   
   float bounds_check() {
     if(abs(output) > offset) {
-      return offset;
+      if(output < 0) {
+        return -offset;
+      }
+      else {
+        return offset;
+      }
     }
     else {
       return output;
