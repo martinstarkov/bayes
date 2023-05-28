@@ -31,7 +31,12 @@ public:
   
   float bounds_check() {
     if(abs(output) > offset) {
-      return offset;
+      if(output < 0) {
+        return -offset;
+      }
+      else {
+        return offset;
+      }
     }
     else {
       return output;

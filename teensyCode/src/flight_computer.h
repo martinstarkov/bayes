@@ -66,7 +66,7 @@ class FlightComputer {
             pitch_servo = 90 + pitchPID.controller(pitch);
             innerServo.write(roll_servo);
             outerServo.write(pitch_servo);
-            print(true);
+            print(false);
             delay(20);
 
         }
