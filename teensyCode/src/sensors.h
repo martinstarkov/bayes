@@ -12,7 +12,7 @@
 // Inertial measurement unit (IMU)
 class IMU {
     Adafruit_BNO055 imu = Adafruit_BNO055();
-    bool calibration_state = false;
+    bool calibration_state = true;
     int calibration_timer = 10;
 
 public:
@@ -27,7 +27,7 @@ public:
 
     void calibrate() {
         static int counter = 0;
-        int system, gyros, accel, mg = 0;
+        uint8_t system, gyros, accel, mg = 0;
         
         switch(calibration_state) {
             case true:
@@ -55,7 +55,7 @@ public:
                     calibration_state = false;
                 }
                 break;
-            case false;
+            case false:
                 Serial.println("Calibration turned off.");
                 break;
         }
@@ -63,12 +63,12 @@ public:
   
     Vector3 getOrientation() {
         imu::Vector<3> ori = imu.getVector(Adafruit_BNO055::VECTOR_EULER);
-        return Vector3(ori.x(), ori.y(), ori.z(););
+        return Vector3(ori.x(), ori.y(), ori.z());
     }
 
     Vector3 getAcceleration() {
         imu::Vector<3> acc = imu.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
-        return Vector3(acc.x(), acc.y(), acc.z(););
+        return Vector3(acc.x(), acc.y(), acc.z());
     }
     
     Vector3 getAngularVelocity() {
@@ -85,13 +85,9 @@ public:
         imu::Quaternion quat = imu.getQuat();
         return Quaternion(quat.w(), quat.x(), quat.y(), quat.z());
     }
-
-    Vector3 getBMPReading() {
-        return Vector3(bayesBMP.readTemperature(), bayesBMP.readPressure(), bayesBMP.readAltitude(1013.25););
-    }
 };
 
-class BMP {
+/*lass BMP {
     Adafruit_BMP280 bmp;
     
     public:
@@ -101,5 +97,9 @@ class BMP {
             while (1);
         }
     }
-};
+
+    Vector3 getBMPReading() {
+      return Vector3(bayesBMP.readTemperature(), bayesBMP.readPressure(), bayesBMP.readAltitude(1013.25));
+    }
+};*/
 #endif
