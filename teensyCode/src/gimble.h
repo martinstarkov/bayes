@@ -3,15 +3,13 @@
 
 #include <Servo.h>
 
-Servo outerServo, innerServo;
+Servo outerServo; 
+Servo innerServo; //outer servo = pitch, inner servo = roll
 
 class Gimble {
-private:
     int rom_duration = 1000;
     int rev_duration = 5000;
-    outerServo.attach(10);  
-    innerServo.attach(11);
-    
+
     float sequence1(int t, int T) {
         return 90*(1-cos((2*PI*t)/T)); 
     }
@@ -34,6 +32,11 @@ private:
     }
     
 public:
+    Gimble() {
+        outerServo.attach(10);
+        innerServo.attach(11);
+    }
+
     void init() {
         innerServo.write(90);
         outerServo.write(90);
@@ -47,7 +50,7 @@ public:
         outerServo.write(90);
         while(counter < rev_duration) {
             innerAngle = sequence1(counter, rom_duration);
-            outerAangle = sequence2(counter, rom_duration);
+            outerAngle = sequence2(counter, rom_duration);
             innerServo.write(innerAngle);
             outerServo.write(outerAngle);
             counter++;

@@ -5,11 +5,11 @@
 
 //Creating a new custom data type Vector3
 class Vector3 {
+public:
   float x = 0.0f;
   float y = 0.0f;
   float z = 0.0f;
-
-public:
+  
   Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
   ~Vector3() {}
 

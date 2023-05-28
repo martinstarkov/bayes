@@ -2,16 +2,17 @@
 #define QUATERNION_H
 
 #include <math.h>
-#include "vector.h"
+#include "vector3.h"
 
 class Quaternion {
+public:
   float w = 0.0f;
   float x = 0.0f;
   float y = 0.0f;
   float z = 0.0f;
   
-public:
   Quaternion(float w, float x, float y, float z) : w(w), x(x), y(y), z(z) {}
+  ~Quaternion() {}
 
   Vector3 toRadians() const{
     float pitch = -1*PI/2 + 2*atan2(sqrt(1 + 2*(w*y - x*z)), sqrt(1 - 2*(w*y - x*z)));
@@ -22,9 +23,10 @@ public:
 
   Vector3 toDegrees() const{
     Vector3 angles = toRadians();
-    angles.x *= RAD_TO_DEG, angles.y *= RAD_TO_DEG, angles.z *= RAD_TO_DEG;
+    angles.x *= RAD_TO_DEG;
+    angles.y *= RAD_TO_DEG;
+    angles.z *= RAD_TO_DEG;
     return angles;
   }
 };
-
 #endif
